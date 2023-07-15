@@ -17,6 +17,31 @@
         "command": "visualyser.helloWorld",
         "title": "Hello World"
       }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "Visualyser-explorer",
+          "title": "Visualyser",
+          "icon": "media/graphIcon.svg"
+        }
+      ]
+    },
+    "views": {
+      "Visualyser-explorer": [
+        {
+          "id": "mainContent",
+          "name": "Visualyser",
+          "icon": "media/graphIcon.svg",
+          "contextualTitle": "Visualyser"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "mainContent",
+        "contents": "No React Project found.\n[Add Project](command:mainContent.addEntry)"
+      }
     ]
   },
   "scripts": {
