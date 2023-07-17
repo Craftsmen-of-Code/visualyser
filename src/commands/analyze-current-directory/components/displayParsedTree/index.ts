@@ -1,15 +1,6 @@
-import * as vscode from "vscode";
-import { getWebviewContent } from "./getWebviewContent";
+import { ExtensionContext } from "vscode";
+import { VisualyserUIPanel } from "../../../../panels/VisualyserUIPanel";
 
-export const displayParsedTree = (data: any) => {
-  const panel = vscode.window.createWebviewPanel(
-    "visualyser",
-    "Visualyser",
-    vscode.ViewColumn.One,
-    {
-      enableScripts: true,
-    }
-  );
-
-  panel.webview.html = getWebviewContent(data);
+export const displayParsedTree = (context: ExtensionContext, data: any) => {
+  VisualyserUIPanel.render(context.extensionUri);
 };

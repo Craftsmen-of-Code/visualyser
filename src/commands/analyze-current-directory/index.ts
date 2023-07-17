@@ -1,16 +1,18 @@
-import * as vscode from "vscode";
+import { ExtensionContext, window, ProgressLocation } from "vscode";
 import { getCurrentDirPath } from "./components/getCurrentDirPath";
 import { validatePackageJson } from "./components/validatePackageJson";
 import { parseProjectToTree } from "./components/parseProjectToTree";
 import { displayParsedTree } from "./components/displayParsedTree";
 
-export const analyzeCurrentDirectoryHandler = async () => {
+export const analyzeCurrentDirectoryHandler = async (
+  context: ExtensionContext
+) => {
   try {
     const currentDir = getCurrentDirPath();
     if (currentDir) {
-      await vscode.window.withProgress(
+      await window.withProgress(
         {
-          location: vscode.ProgressLocation.Notification,
+          location: ProgressLocation.Notification,
           title: "Analyzing current directory",
           cancellable: false,
         },
@@ -24,17 +26,16 @@ export const analyzeCurrentDirectoryHandler = async () => {
 
           progress.report({ message: "Reading files..." });
           const parsedData = await parseProjectToTree(currentDir);
-          console.log(parsedData);
 
           progress.report({ message: "Displaying parsed data..." });
-          displayParsedTree(parsedData);
+          displayParsedTree(context, parsedData);
         }
       );
     } else {
-      vscode.window.showErrorMessage("No workspace folder found");
+      window.showErrorMessage("No workspace folder found");
     }
   } catch (error: any) {
     console.log(error);
-    vscode.window.showErrorMessage(error.message);
+    window.showErrorMessage(error.message);
   }
 };

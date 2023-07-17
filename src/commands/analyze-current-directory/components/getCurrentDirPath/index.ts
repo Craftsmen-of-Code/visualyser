@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
+import { workspace } from "vscode";
 
 export const getCurrentDirPath = (): string | undefined => {
-  return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  return workspace.workspaceFolders?.[0]?.uri.fsPath;
 };

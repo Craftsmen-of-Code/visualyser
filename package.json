@@ -51,10 +51,13 @@
     ]
   },
   "scripts": {
+    "install:all": "npm install && cd webview-ui && npm install && cd ..",
+    "start:webview": "cd webview-ui && npm run start && cd ..",
+    "build:webview": "cd webview-ui && npm run build && cd ..",
     "vscode:prepublish": "npm run compile",
     "esbuild-base": "esbuild src/extension.ts --bundle --minify --outdir=build --external:vscode --platform=node --target=node14 --format=cjs",
-    "compile": "npm run esbuild-base",
-    "watch": "npm run compile -- --watch",
+    "compile": "npm run build:webview && npm run esbuild-base",
+    "watch": "npm run build:webview && npm run compile -- --watch",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./build/test/runTest.js"
@@ -74,8 +77,6 @@
   },
   "dependencies": {
     "@babel/parser": "^7.22.7",
-    "@babel/traverse": "^7.22.8",
-    "chart.js": "^4.3.0",
-    "chartjs-chart-graph": "^4.2.3"
+    "@babel/traverse": "^7.22.8"
   }
 }

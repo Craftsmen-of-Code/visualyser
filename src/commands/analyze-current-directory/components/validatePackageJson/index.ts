@@ -1,11 +1,11 @@
-import * as vscode from "vscode";
+import { Progress } from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { glob } from "glob";
 
 export const validatePackageJson = async (
   currentDir: string,
-  progress: vscode.Progress<{
+  progress: Progress<{
     message?: string | undefined;
     increment?: number | undefined;
   }>
