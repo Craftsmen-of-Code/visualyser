@@ -35,6 +35,23 @@ export class Parser {
     // Break down and reasemble given filePath safely for any OS using path?
   }
 
+  private normalizePaths(tree: Tree): Tree {
+    const newTree = { ...tree };
+    newTree.filePath = newTree.filePath.replace(getCurrentDirPath()!, "");
+    if (newTree.children) {
+      newTree.children = newTree.children.map((child) =>
+        this.normalizePaths(child)
+      );
+      newTree.parentList = newTree.parentList.map((parent) =>
+        parent.replace(getCurrentDirPath()!, "")
+      );
+    }
+    if (newTree.thirdParty) {
+      newTree.filePath = `/node_modules/${newTree.importPath}`;
+    }
+    return newTree;
+  }
+
   // Public method to generate component tree based on current entryFile
   public parse(): Tree {
     // Create root Tree node
@@ -57,7 +74,7 @@ export class Parser {
 
     this.tree = root;
     this.parser(root);
-    return this.tree;
+    return this.normalizePaths(this.tree);
   }
 
   public getTree(): Tree | undefined {
