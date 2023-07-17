@@ -63,13 +63,12 @@
     "test": "node ./build/test/runTest.js"
   },
   "devDependencies": {
-    "@types/babel__traverse": "^7.20.1",
+    "@babel/types": "^7.22.5",
     "@types/glob": "^8.1.0",
     "@types/node": "20.4.2",
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "@vscode/test-electron": "^2.3.3",
     "esbuild": "^0.18.13",
     "eslint": "^8.45.0",
     "glob": "^10.3.3",
@@ -77,6 +76,6 @@
   },
   "dependencies": {
     "@babel/parser": "^7.22.7",
-    "@babel/traverse": "^7.22.8"
+    "nanoid": "^4.0.2"
   }
 }

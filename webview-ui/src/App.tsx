@@ -1,24 +1,48 @@
-import { useState } from "react";
-import "./App.css";
+import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
+import { useEffect, useState } from "react";
+import { Tree } from "../../src/types/Tree";
+import ReactJson from "react-json-view";
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [treeData, setTreeData] = useState<Tree | null>(null);
+
+  useEffect(() => {
+    const vscode = (window as any).acquireVsCodeApi();
+
+    window.addEventListener("message", (event) => {
+      const message = event.data;
+      switch (message.command) {
+        case "tree-data": {
+          setTreeData(message.data as Tree);
+          setLoading(false);
+          break;
+        }
+        default: {
+          alert("Unknown message type received in webview");
+          break;
+        }
+      }
+    });
+
+    let loadingTimeout = setTimeout(() => {
+      vscode.postMessage({
+        command: "ready",
+      });
+      clearTimeout(loadingTimeout);
+    }, 2000);
+  }, []);
 
   return (
-    <>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div>
+      {loading ? (
+        <div className="loader-container">
+          <VSCodeProgressRing />
+        </div>
+      ) : (
+        <ReactJson src={treeData!} theme="chalk" collapsed={1} />
+      )}
+    </div>
   );
 }
 

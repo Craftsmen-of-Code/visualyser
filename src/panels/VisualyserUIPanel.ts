@@ -23,6 +23,7 @@ export class VisualyserUIPanel {
   public static currentPanel: VisualyserUIPanel | undefined;
   private readonly _panel: WebviewPanel;
   private _disposables: Disposable[] = [];
+  private _treeData: any;
 
   /**
    * The VisualyserUIPanel class private constructor (called only from the render method).
@@ -30,7 +31,8 @@ export class VisualyserUIPanel {
    * @param panel A reference to the webview panel
    * @param extensionUri The URI of the directory containing the extension
    */
-  private constructor(panel: WebviewPanel, extensionUri: Uri) {
+  private constructor(panel: WebviewPanel, extensionUri: Uri, data: any) {
+    this._treeData = data;
     this._panel = panel;
 
     // Set an event listener to listen for when the panel is disposed (i.e. when the user closes
@@ -53,7 +55,7 @@ export class VisualyserUIPanel {
    *
    * @param extensionUri The URI of the directory containing the extension.
    */
-  public static render(extensionUri: Uri) {
+  public static render(extensionUri: Uri, data: any) {
     if (VisualyserUIPanel.currentPanel) {
       // If the webview panel already exists reveal it
       VisualyserUIPanel.currentPanel._panel.reveal(ViewColumn.One);
@@ -80,7 +82,8 @@ export class VisualyserUIPanel {
 
       VisualyserUIPanel.currentPanel = new VisualyserUIPanel(
         panel,
-        extensionUri
+        extensionUri,
+        data
       );
     }
   }
@@ -140,7 +143,7 @@ export class VisualyserUIPanel {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} https://*.vscode-cdn.net 'unsafe-inline'; script-src 'nonce-${nonce}';">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>Hello World</title>
         </head>
@@ -181,15 +184,16 @@ export class VisualyserUIPanel {
     webview.onDidReceiveMessage(
       (message: any) => {
         const command = message.command;
-        const text = message.text;
 
         switch (command) {
-          case "hello":
-            // Code that should run in response to the hello message command
-            window.showInformationMessage(text);
-            return;
-          // Add more switch case statements here as more webview message commands
-          // are created within the webview context (i.e. inside media/main.js)
+          case "ready": {
+            webview.postMessage({
+              command: "tree-data",
+              data: this._treeData,
+            });
+            break;
+          }
+          // Add more switch case statements here as more webview message commands are created within the webview context
         }
       },
       undefined,

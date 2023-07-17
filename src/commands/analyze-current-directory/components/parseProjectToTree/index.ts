@@ -1,27 +1,20 @@
 import * as fs from "fs";
 import * as path from "path";
 import { glob } from "glob";
-import * as babel from "@babel/parser";
-import traverse from "@babel/traverse";
-
-interface ComponentNode {
-  name: string;
-  path: string;
-  props: string[];
-  state: string[];
-  children: ComponentNode[];
-}
+import { Tree } from "../../../../types/Tree";
+import { Parser } from "./Parser";
 
 export const parseProjectToTree = async (
   dir: string
-): Promise<ComponentNode[]> => {
+): Promise<Tree | undefined> => {
   const files = await glob("**/*.{js,jsx,ts,tsx}", {
     cwd: dir,
     ignore: ["node_modules/**"],
     maxDepth: Infinity,
   });
 
-  const components: ComponentNode[] = [];
+  // const components: ComponentNode[] = [];
+  const filesWithReactCode: string[] = [];
 
   for (const file of files) {
     const filePath = path.join(dir, file);
@@ -36,124 +29,21 @@ export const parseProjectToTree = async (
       continue;
     }
 
-    const ast = babel.parse(fileContent, {
-      sourceType: "module",
-      plugins: ["jsx", "typescript"],
-    });
-
-    const componentNode: ComponentNode = {
-      name: "",
-      path: file,
-      props: [],
-      state: [],
-      children: [],
-    };
-
-    traverse(ast, {
-      FunctionDeclaration(path) {
-        if (path.node.id) {
-          componentNode.name = path.node.id.name;
-        }
-      },
-      FunctionExpression(path) {
-        if (
-          path.parent.type === "VariableDeclarator" &&
-          path.parent.id.type === "Identifier"
-        ) {
-          componentNode.name = path.parent.id.name;
-        }
-      },
-      ClassDeclaration(path) {
-        if (path.node.id) {
-          componentNode.name = path.node.id.name;
-        }
-
-        const stateProperty = path.node.body.body.find((node) => {
-          // @ts-ignore
-          return node.type === "ClassProperty" && node.key.name === "state";
-        });
-
-        // @ts-ignore
-        if (stateProperty && stateProperty.value.type === "ObjectExpression") {
-          // @ts-ignore
-          for (const prop of stateProperty.value.properties) {
-            if (prop.key.type === "Identifier") {
-              componentNode.state.push(prop.key.name);
-            }
-          }
-        }
-      },
-      ClassExpression(path) {
-        if (
-          path.parent.type === "VariableDeclarator" &&
-          path.parent.id.type === "Identifier"
-        ) {
-          componentNode.name = path.parent.id.name;
-        }
-
-        const stateProperty = path.node.body.body.find((node) => {
-          // @ts-ignore
-          return node.type === "ClassProperty" && node.key.name === "state";
-        });
-
-        // @ts-ignore
-        if (stateProperty && stateProperty.value.type === "ObjectExpression") {
-          // @ts-ignore
-          for (const prop of stateProperty.value?.properties) {
-            if (prop.key.type === "Identifier") {
-              componentNode.state.push(prop.key.name);
-            }
-          }
-        }
-      },
-      CallExpression(path) {
-        if (
-          path.node.callee.type === "Identifier" &&
-          path.node.callee.name === "useState"
-        ) {
-          // @ts-ignore
-          const stateVariable = path.parent.id;
-
-          if (stateVariable.type === "ArrayPattern") {
-            for (const element of stateVariable.elements) {
-              if (element.type === "Identifier") {
-                componentNode.state.push(element.name);
-              }
-              break;
-            }
-          } else if (stateVariable.type === "Identifier") {
-            componentNode.state.push(stateVariable.name);
-          }
-        }
-      },
-    });
-
-    components.push(componentNode);
+    filesWithReactCode.push(filePath);
   }
 
-  const componentMap = new Map<string, ComponentNode>();
-
-  for (const component of components) {
-    componentMap.set(component.path, component);
+  if (!filesWithReactCode.length) {
+    return;
   }
 
-  for (const component of components) {
-    const parentPath = path.dirname(component.path);
-    const parent = componentMap.get(parentPath);
+  const entryPoint: string | undefined =
+    filesWithReactCode.find((file) => file.includes("index")) ||
+    filesWithReactCode.find((file) => file.includes("main")) ||
+    filesWithReactCode.find((file) => file.includes("App"));
 
-    if (parent) {
-      parent.children.push(component);
-    }
+  if (!entryPoint) {
+    throw new Error("No entry point found");
   }
 
-  return components.filter((component) => {
-    const parentPath = path.dirname(component.path);
-    const parent = componentMap.get(parentPath);
-
-    if (parent) {
-      return false;
-    }
-
-    return true;
-  });
+  return new Parser(entryPoint).parse();
 };
